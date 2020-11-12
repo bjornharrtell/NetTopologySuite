@@ -2097,6 +2097,9 @@ namespace NetTopologySuite.Geometries
         /// <returns></returns>
         protected static bool Equal(Coordinate a, Coordinate b, double tolerance)
         {
+            var cc = CoordinateEqualityComparer;
+            if (cc != null) return cc.AreEqual(a, b, tolerance);
+
             if (tolerance == 0)
                 return a.Equals(b);
 
@@ -2188,6 +2191,14 @@ namespace NetTopologySuite.Geometries
                     _inner.Filter(seq);
                 }
             }
+
         }
+
+        /// <summary>
+        /// Gets or sets an (Optional) object that is used to test 2 coordinates for equality.
+        /// <br/> If <c>null</c>, standard JTS-like equality checks are performed.
+        /// </summary>
+        /// <returns>A coordinate equality tester object or <c>null</c></returns>
+        public static CoordinateEqualityComparer CoordinateEqualityComparer { get; set; } //= new CoordinateZComparer();
     }
 }
