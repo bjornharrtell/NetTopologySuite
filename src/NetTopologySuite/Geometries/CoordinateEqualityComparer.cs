@@ -1,12 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace NetTopologySuite.Geometries
 {
     /// <summary>
     /// A class that can be used to test coordinates for equality
     /// </summary>
-    public abstract class CoordinateEqualityComparer
+    public abstract class CoordinateEqualityComparer : EqualityComparer<Coordinate>
     {
+        /// <inheritdoc cref="EqualityComparer{T}.Equals(T, T)"/>
+        public sealed override bool Equals(Coordinate x, Coordinate y)
+        {
+            return AreEqual(x, y, 0d);
+        }
+
+        /// <inheritdoc cref="EqualityComparer{T}.GetHashCode(T)"/>
+        public sealed override int GetHashCode(Coordinate c)
+        {
+            return c.GetHashCode();
+        }
+
         /// <summary>
         /// Method to test 2 <see cref="Coordinate"/>s for equality, allowing a tolerance.
         /// </summary>
@@ -27,20 +40,9 @@ namespace NetTopologySuite.Geometries
         public override bool AreEqual(Coordinate a, Coordinate b, double tolerance)
         {
             if (tolerance.Equals(0d))
-                return a.Equals(b) && EqualInZ(a, b);
+                return a.Equals(b) && a.Z.Equals(b.Z);
 
             return a.Distance(b) <= tolerance && DistanceInZ(a, b) <= tolerance;
-        }
-
-        private bool EqualInZ(Coordinate a, Coordinate b)
-        {
-            if (double.IsNaN(a.Z) && double.IsNaN(b.Z))
-                return true;
-
-            if (double.IsNaN(a.Z) || double.IsNaN(b.Z))
-                return false;
-
-            return a.Z == b.Z;
         }
 
         private static double DistanceInZ(Coordinate a, Coordinate b)
@@ -52,6 +54,34 @@ namespace NetTopologySuite.Geometries
                 return double.PositiveInfinity;
 
             return Math.Abs(a.Z - b.Z);
+        }
+    }
+    /// <summary>
+    /// An implementation of <see cref="CoordinateEqualityComparer"/> that includes
+    /// <see cref="Coordinate.Z"/> and <see cref="Coordinate.M"/> into equality tests.
+    /// </summary>
+    public sealed class CoordinateZMComparer : CoordinateEqualityComparer
+    {
+        /// <inheritdoc cref="CoordinateEqualityComparer.AreEqual"/>
+        public override bool AreEqual(Coordinate a, Coordinate b, double tolerance)
+        {
+            if (tolerance.Equals(0d))
+                return a.Equals(b) && a.Z.Equals(b.Z) && a.M.Equals(b.M);
+
+            return a.Distance(b) <= tolerance &&
+                   Distance(a.Z, b.Z) <= tolerance &&
+                   Distance(a.M, b.M) <= tolerance;
+        }
+
+        private static double Distance(double a, double b)
+        {
+            if (double.IsNaN(a) && double.IsNaN(b))
+                return 0d;
+
+            if (double.IsNaN(a) || double.IsNaN(b))
+                return double.PositiveInfinity;
+
+            return Math.Abs(a - b);
         }
     }
 }

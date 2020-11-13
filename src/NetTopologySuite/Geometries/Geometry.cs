@@ -2095,6 +2095,7 @@ namespace NetTopologySuite.Geometries
         /// <param name="b"></param>
         /// <param name="tolerance"></param>
         /// <returns></returns>
+#if !Joe
         protected static bool Equal(Coordinate a, Coordinate b, double tolerance)
         {
             var cc = CoordinateEqualityComparer;
@@ -2105,6 +2106,39 @@ namespace NetTopologySuite.Geometries
 
             return a.Distance(b) <= tolerance;
         }
+#else
+        //Joe Amenta's suggestion
+        protected static bool Equal(Coordinate a, Coordinate b, double tolerance)
+        {
+            int dimensionA = Geometries.Coordinates.Dimension(a);
+            int dimensionB = Geometries.Coordinates.Dimension(b);
+            if (dimensionA != dimensionB)
+            {
+                return false;
+            }
+
+            int measuresA = Geometries.Coordinates.Measures(a);
+            int measuresB = Geometries.Coordinates.Measures(b);
+            if (measuresA != measuresB)
+            {
+                return false;
+            }
+
+            for (int dim = 0; dim < dimensionA; dim++)
+            {
+                double valA = a[dim];
+                double valB = b[dim];
+
+                // this next line is carefully crafted to ensure reasonable treatment of NaNs
+                if (!(valA.Equals(valB) || Math.Abs(valA - valB) <= tolerance))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+#endif
 
         /// <summary>
         /// Gets a value to sort the geometry
