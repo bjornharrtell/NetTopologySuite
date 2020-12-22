@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-
+using System.Runtime.Serialization;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Implementation;
 
@@ -23,6 +23,7 @@ namespace NetTopologySuite
     {
         private static volatile NtsGeometryServices s_instance = new NtsGeometryServices();
 
+        [NonSerialized]
         private readonly ConcurrentDictionary<GeometryFactoryKey, GeometryFactory> m_factories = new ConcurrentDictionary<GeometryFactoryKey, GeometryFactory>();
 
         /// <summary>
@@ -104,13 +105,29 @@ namespace NetTopologySuite
         /// <param name="precisionModel">The precision model.</param>
         /// <param name="srid">The default spatial reference ID</param>
         /// <param name="geometryOverlay">The geometry overlay function set to use.</param>
-        public NtsGeometryServices(CoordinateSequenceFactory coordinateSequenceFactory, PrecisionModel precisionModel, int srid, GeometryOverlay geometryOverlay)
+        public NtsGeometryServices(CoordinateSequenceFactory coordinateSequenceFactory, PrecisionModel precisionModel, int srid, GeometryOverlay geometryOverlay):
+            this(coordinateSequenceFactory, precisionModel, srid, geometryOverlay, new CoordinateEqualityComparer())
+        { }
+
+        /// <summary>
+        /// Creates an instance of this class, using the provided <see cref="CoordinateSequenceFactory"/>,
+        /// <see cref="PrecisionModel"/>, a spatial reference Id (<paramref name="srid"/>) and
+        /// a <see cref="Geometries.GeometryOverlay"/>.
+        /// </summary>
+        /// <param name="coordinateSequenceFactory">The coordinate sequence factory to use.</param>
+        /// <param name="precisionModel">The precision model.</param>
+        /// <param name="srid">The default spatial reference ID</param>
+        /// <param name="geometryOverlay">The geometry overlay function set to use.</param>
+        /// <param name="coordinateEqualityComparer">The equality comparer for coordinates</param>
+        public NtsGeometryServices(CoordinateSequenceFactory coordinateSequenceFactory, PrecisionModel precisionModel, int srid,
+            GeometryOverlay geometryOverlay, CoordinateEqualityComparer coordinateEqualityComparer)
         {
             DefaultCoordinateSequenceFactory = coordinateSequenceFactory ??
                                                throw new ArgumentNullException(nameof(coordinateSequenceFactory));
             DefaultPrecisionModel = precisionModel ?? throw new ArgumentNullException(nameof(precisionModel));
             DefaultSRID = srid;
-            GeometryOverlay = geometryOverlay;
+            GeometryOverlay = geometryOverlay ?? throw new ArgumentNullException(nameof(geometryOverlay)); ;
+            CoordinateEqualityComparer = coordinateEqualityComparer ?? throw new ArgumentNullException(nameof(coordinateEqualityComparer)); ;
         }
 
         /// <summary>
@@ -130,6 +147,13 @@ namespace NetTopologySuite
         /// </summary>
         /// <returns>A set of geometry overlay functions.</returns>
         public GeometryOverlay GeometryOverlay { get; }
+
+        /// <summary>
+        /// Gets or sets an (Optional) object that is used to test 2 coordinates for equality.
+        /// <br/> If <c>null</c>, standard JTS-like equality checks are performed.
+        /// </summary>
+        /// <returns>A coordinate equality tester object or <c>null</c></returns>
+        public CoordinateEqualityComparer CoordinateEqualityComparer { get; }
 
 
         /// <summary>
@@ -268,7 +292,7 @@ namespace NetTopologySuite
         /// </remarks>
         protected virtual GeometryFactory CreateGeometryFactoryCore(PrecisionModel precisionModel, int srid, CoordinateSequenceFactory coordinateSequenceFactory)
         {
-            return new GeometryFactory(precisionModel, srid, coordinateSequenceFactory, GeometryOverlay);
+            return new GeometryFactory(precisionModel, srid, coordinateSequenceFactory, this);
         }
 
         private readonly struct GeometryFactoryKey : IEquatable<GeometryFactoryKey>

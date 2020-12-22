@@ -2095,50 +2095,15 @@ namespace NetTopologySuite.Geometries
         /// <param name="b"></param>
         /// <param name="tolerance"></param>
         /// <returns></returns>
-#if !Joe
+
+        [Obsolete("Will be removed in a future version")]
         protected static bool Equal(Coordinate a, Coordinate b, double tolerance)
         {
-            var cc = CoordinateEqualityComparer;
-            if (cc != null) return cc.AreEqual(a, b, tolerance);
-
             if (tolerance == 0)
                 return a.Equals(b);
 
             return a.Distance(b) <= tolerance;
         }
-#else
-        //Joe Amenta's suggestion
-        protected static bool Equal(Coordinate a, Coordinate b, double tolerance)
-        {
-            int dimensionA = Geometries.Coordinates.Dimension(a);
-            int dimensionB = Geometries.Coordinates.Dimension(b);
-            if (dimensionA != dimensionB)
-            {
-                return false;
-            }
-
-            int measuresA = Geometries.Coordinates.Measures(a);
-            int measuresB = Geometries.Coordinates.Measures(b);
-            if (measuresA != measuresB)
-            {
-                return false;
-            }
-
-            for (int dim = 0; dim < dimensionA; dim++)
-            {
-                double valA = a[dim];
-                double valB = b[dim];
-
-                // this next line is carefully crafted to ensure reasonable treatment of NaNs
-                if (!(valA.Equals(valB) || Math.Abs(valA - valB) <= tolerance))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-#endif
 
         /// <summary>
         /// Gets a value to sort the geometry
@@ -2227,12 +2192,5 @@ namespace NetTopologySuite.Geometries
             }
 
         }
-
-        /// <summary>
-        /// Gets or sets an (Optional) object that is used to test 2 coordinates for equality.
-        /// <br/> If <c>null</c>, standard JTS-like equality checks are performed.
-        /// </summary>
-        /// <returns>A coordinate equality tester object or <c>null</c></returns>
-        public static CoordinateEqualityComparer CoordinateEqualityComparer { get; set; } //= new CoordinateZComparer();
     }
 }

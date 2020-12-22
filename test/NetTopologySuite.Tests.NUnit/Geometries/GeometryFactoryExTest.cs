@@ -24,7 +24,7 @@ namespace NetTopologySuite.Tests.NUnit.Geometries
             protected override GeometryFactory CreateGeometryFactoryCore(PrecisionModel precisionModel, int srid,
                 CoordinateSequenceFactory coordinateSequenceFactory)
             {
-                return new GeometryFactoryEx(precisionModel, srid, coordinateSequenceFactory, GeometryOverlay);
+                return new GeometryFactoryEx(precisionModel, srid, coordinateSequenceFactory, this);
             }
         }
 

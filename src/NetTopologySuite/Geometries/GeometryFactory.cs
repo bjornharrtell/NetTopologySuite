@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using NetTopologySuite.Geometries.Utilities;
 using NetTopologySuite.Utilities;
 
@@ -37,13 +38,13 @@ namespace NetTopologySuite.Geometries
         /// A predefined <see cref="GeometryFactory" /> with <see cref="PrecisionModel" />
         /// <c> == </c> <see cref="PrecisionModels.FloatingSingle" />.
         /// </summary>
-        public static readonly GeometryFactory FloatingSingle = new GeometryFactory(new PrecisionModel(PrecisionModels.FloatingSingle));
+        public static readonly GeometryFactory FloatingSingle = new GeometryFactory(PrecisionModel.FloatingSingle.Value);
 
         /// <summary>
         /// A predefined <see cref="GeometryFactory" /> with <see cref="PrecisionModel" />
         /// <c> == </c> <see cref="PrecisionModels.Fixed" />.
         /// </summary>
-        public static readonly GeometryFactory Fixed = new GeometryFactory(new PrecisionModel(PrecisionModels.Fixed));
+        public static readonly GeometryFactory Fixed = new GeometryFactory(PrecisionModel.Fixed.Value);
 
         private readonly PrecisionModel _precisionModel;
 
@@ -67,7 +68,8 @@ namespace NetTopologySuite.Geometries
         /// </summary>
         public int SRID => _srid;
 
-        private GeometryOverlay _geometryOverlay;
+        [NonSerialized]
+        private readonly NtsGeometryServices _services;
 
         /// <summary>
         /// Gets a value indicating the geometry overlay function set to use
@@ -75,7 +77,16 @@ namespace NetTopologySuite.Geometries
         /// <returns>A geometry overlay function set.</returns>
         internal GeometryOverlay GeometryOverlay
         {
-            get { return _geometryOverlay; }
+            get { return (_services ?? NtsGeometryServices.Instance).GeometryOverlay; }
+        }
+
+        /// <summary>
+        /// Gets a value indicating the geometry overlay function set to use
+        /// </summary>
+        /// <returns>A geometry overlay function set.</returns>
+        internal CoordinateEqualityComparer CoordinateEqualityComparer
+        {
+            get { return (_services ?? NtsGeometryServices.Instance).CoordinateEqualityComparer; }
         }
 
         /// <summary>
@@ -99,13 +110,14 @@ namespace NetTopologySuite.Geometries
         /// <param name="precisionModel">A precision model</param>
         /// <param name="srid">A spatial reference id</param>
         /// <param name="coordinateSequenceFactory">A coordinate sequence factory</param>
-        /// <param name="geometryOverlay">A geometry overlay function set</param>
-        public GeometryFactory(PrecisionModel precisionModel, int srid, CoordinateSequenceFactory coordinateSequenceFactory, GeometryOverlay geometryOverlay)
+        /// <param name="services">A geometry overlay function set</param>
+        public GeometryFactory(PrecisionModel precisionModel, int srid, CoordinateSequenceFactory coordinateSequenceFactory,
+            NtsGeometryServices services)
         {
             _precisionModel = precisionModel;
             _coordinateSequenceFactory = coordinateSequenceFactory;
             _srid = srid;
-            _geometryOverlay = geometryOverlay;
+            _services = services;
         }
 
         /// <summary>
@@ -113,7 +125,7 @@ namespace NetTopologySuite.Geometries
         /// PrecisionModel, spatial-reference ID, and CoordinateSequence implementation.
         /// </summary>
         public GeometryFactory(PrecisionModel precisionModel, int srid, CoordinateSequenceFactory coordinateSequenceFactory)
-            : this(precisionModel, srid, coordinateSequenceFactory, NtsGeometryServices.Instance.GeometryOverlay)
+            : this(precisionModel, srid, coordinateSequenceFactory, NtsGeometryServices.Instance)
         {
         }
 

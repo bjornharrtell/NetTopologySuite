@@ -1,5 +1,6 @@
 ﻿using System;
 using NetTopologySuite.Geometries;
+using NetTopologySuite.Geometries.Implementation;
 using NetTopologySuite.Operation.Overlay;
 using NUnit.Framework;
 
@@ -10,13 +11,17 @@ namespace NetTopologySuite.Tests.NUnit.Geometries
     /// </summary>
     public class GeometryOverlayTest : GeometryTestCase
     {
+        private static NtsGeometryServices OverlayLegacy = new NtsGeometryServices(
+            CoordinateArraySequenceFactory.Instance, PrecisionModel.Floating.Value, 0, GeometryOverlay.Legacy);
+        private static NtsGeometryServices OverlayNG = new NtsGeometryServices(
+            CoordinateArraySequenceFactory.Instance, PrecisionModel.Floating.Value, 0, GeometryOverlay.NG);
+
         private static (Geometry a, Geometry b) Create()
         {
-            var i = NtsGeometryServices.Instance;
-            var gf = new GeometryFactory(i.DefaultPrecisionModel, 0, i.DefaultCoordinateSequenceFactory, GeometryOverlay.Legacy);
-            var p1 = gf.CreatePoint(new Coordinate(10, 10));
-            gf = new GeometryFactory(i.DefaultPrecisionModel, 0, i.DefaultCoordinateSequenceFactory, GeometryOverlay.NG);
-            var p2 = gf.CreatePoint(new Coordinate(11, 11));
+            var i = OverlayLegacy;
+            var p1 = i.CreateGeometryFactory().CreatePoint(new Coordinate(10, 10));
+            i = OverlayNG;
+            var p2 = i.CreateGeometryFactory().CreatePoint(new Coordinate(11, 11));
 
             return (p1, p2);
         }

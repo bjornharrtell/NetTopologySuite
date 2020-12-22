@@ -1,20 +1,23 @@
-﻿using NUnit.Framework;
+﻿using NetTopologySuite.Geometries;
+using NUnit.Framework;
 
 namespace NetTopologySuite.Samples.Tests.Github
 {
     [Description("https://github.com/NetTopologySuite/NetTopologySuite/issues/447")]
     public class Issue447
     {
+        private static readonly CoordinateSequenceFactory CsFactory =
+            NtsGeometryServices.Instance.DefaultCoordinateSequenceFactory;
+        
         [Test]
         public void Test()
         {
-            NetTopologySuite.Geometries.Geometry.CoordinateEqualityComparer = new NetTopologySuite.Geometries.CoordinateZMComparer();
-
-            Assert.IsFalse(new NetTopologySuite.Geometries.Point(1, 2) == new NetTopologySuite.Geometries.Point(1, 2, 3));
-            Assert.AreNotEqual(new NetTopologySuite.Geometries.Point(1, 2), new NetTopologySuite.Geometries.Point(1, 2, 3));
-
-            NetTopologySuite.Geometries.Geometry.CoordinateEqualityComparer = null;
-
+            var i = new NtsGeometryServices(CsFactory, PrecisionModel.Floating.Value, 0,
+                GeometryOverlay.Legacy, new CoordinateZMComparer());
+            var pt1 = i.CreateGeometryFactory().CreatePoint(new Coordinate(1, 2));
+            var pt2 = i.CreateGeometryFactory().CreatePoint(new CoordinateZ(1, 2, 3));
+            Assert.IsFalse(pt1 == pt2);
+            Assert.AreNotEqual(pt1, pt2);
         }
 
         [Test]

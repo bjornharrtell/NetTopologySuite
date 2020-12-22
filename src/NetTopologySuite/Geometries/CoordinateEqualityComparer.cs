@@ -6,7 +6,8 @@ namespace NetTopologySuite.Geometries
     /// <summary>
     /// A class that can be used to test coordinates for equality
     /// </summary>
-    public abstract class CoordinateEqualityComparer : EqualityComparer<Coordinate>
+    [Serializable]
+    public class CoordinateEqualityComparer : EqualityComparer<Coordinate>
     {
         /// <inheritdoc cref="EqualityComparer{T}.Equals(T, T)"/>
         public sealed override bool Equals(Coordinate x, Coordinate y)
@@ -27,13 +28,22 @@ namespace NetTopologySuite.Geometries
         /// <param name="b">The 2nd Coordinate</param>
         /// <param name="tolerance">A tolerance value</param>
         /// <returns></returns>
-        public abstract bool AreEqual(Coordinate a, Coordinate b, double tolerance);
+        public virtual bool AreEqual(Coordinate a, Coordinate b, double tolerance)
+        {
+            if (tolerance == 0)
+                return a.Equals(b);
+
+            return a.Distance(b) <= tolerance;
+        }
     }
+
+
 
     /// <summary>
     /// An implementation of <see cref="CoordinateEqualityComparer"/> that includes
     /// <see cref="Coordinate.Z"/> into equality tests.
     /// </summary>
+    [Serializable]
     public sealed class CoordinateZComparer : CoordinateEqualityComparer
     {
         /// <inheritdoc cref="CoordinateEqualityComparer.AreEqual"/>
@@ -60,6 +70,7 @@ namespace NetTopologySuite.Geometries
     /// An implementation of <see cref="CoordinateEqualityComparer"/> that includes
     /// <see cref="Coordinate.Z"/> and <see cref="Coordinate.M"/> into equality tests.
     /// </summary>
+    [Serializable]
     public sealed class CoordinateZMComparer : CoordinateEqualityComparer
     {
         /// <inheritdoc cref="CoordinateEqualityComparer.AreEqual"/>
